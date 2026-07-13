@@ -31,9 +31,24 @@ npm run dev
 ```
 Runs on http://localhost:5173
 
-### 4. Create your first admin account
-Go to /register, choose role "Admin (exam creator)". Then log in as admin to create exams,
-and register a second account as "Student" to attempt them.
+### 4. Create the admin account
+There's no public "register as admin" option — admin is seeded from your `.env` so random
+people can't sign up as admin. 
+```
+ADMIN_NAME="Your Name"
+ADMIN_EMAIL="adminmail"
+ADMIN_PASSWORD="a-strong-password"
+```
+Then run:
+```bash
+cd backend
+npm run seed
+```
+This is idempotent — safe to re-run any time (e.g. if you change the admin password in `.env`,
+just re-run `npm run seed` and it updates the existing account instead of duplicating it).
+
+Log in at `/login` with those credentials to get the admin dashboard. Everyone who signs up
+through `/register` becomes a STUDENT — the backend ignores any role sent from the client.
 
 ## How the timer works (important)
 The timer is NOT trusted from the frontend. When a student hits "Start Exam", the backend
