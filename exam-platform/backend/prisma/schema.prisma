@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+}
+
+enum QuestionType {
+  MCQ
+  DESCRIPTIVE
+  CODING
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum SubmissionStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  AUTO_SUBMITTED
+  EVALUATED
+}
+
+model User {
+  id           String       @id @default(uuid())
+  name         String
+  email        String       @unique
+  password     String
+  role         Role         @default(STUDENT)
+  createdAt    DateTime     @default(now())
+
+  examsCreated Exam[]       @relation("ExamCreator")
+  submissions  Submission[]
+}
+
+model Exam {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  durationMin Int          // exam duration in minutes
+  startTime   DateTime     // window opens
+  endTime     DateTime     // window closes (no new attempts allowed after this)
+  status      ExamStatus   @default(DRAFT)
+  totalMarks  Int          @default(0)
+
+  createdBy   User         @relation("ExamCreator", fields: [createdById], references: [id])
+  createdById String
+
+  questions   Question[]
+  submissions Submission[]
+
+  createdAt   DateTime     @default(now())
+}
+
+model Question {
+  id            String       @id @default(uuid())
+  exam          Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  examId        String
+
+  type          QuestionType
+  text          String
+  marks         Int          @default(1)
+
+  // MCQ specific
+  options       Json?        // ["opt1","opt2","opt3","opt4"]
+  correctOption Int?         // index of correct option (never sent to student)
+
+  // Coding specific
+  starterCode   String?
+  language      String?      // e.g. "javascript", "python", "cpp"
+
+  order         Int          @default(0)
+
+  answers       Answer[]
+}
+
+model Submission {
+  id           String            @id @default(uuid())
+  exam         Exam              @relation(fields: [examId], references: [id])
+  examId       String
+  user         User              @relation(fields: [userId], references: [id])
+  userId       String
+
+  status       SubmissionStatus  @default(NOT_STARTED)
+  startedAt    DateTime?
+  deadlineAt   DateTime?         // startedAt + exam.durationMin, computed at start
+  submittedAt  DateTime?
+
+  totalScore   Int?
+  evaluated    Boolean           @default(false)
+
+  answers      Answer[]
+
+  @@unique([examId, userId]) // one attempt per student per exam
+}
+
+model Answer {
+  id            String     @id @default(uuid())
+  submission    Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submissionId  String
+  question      Question   @relation(fields: [questionId], references: [id])
+  questionId    String
+
+  mcqSelected   Int?       // selected option index
+  textAnswer    String?    // descriptive answer
+  code          String?    // coding answer
+
+  marksAwarded  Int?
+  feedback      String?
+  evaluated     Boolean    @default(false)
+
+  @@unique([submissionId, questionId])
+}
