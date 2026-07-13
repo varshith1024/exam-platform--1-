@@ -6,9 +6,14 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "build": "prisma generate && prisma migrate deploy",
+    "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:studio": "prisma studio",
+    "seed": "node prisma/seed.js"
+  },
+  "prisma": {
     "seed": "node prisma/seed.js"
   },
   "dependencies": {
