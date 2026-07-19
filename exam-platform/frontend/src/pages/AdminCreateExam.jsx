@@ -53,7 +53,17 @@ export default function AdminCreateExam() {
     }
 
     try {
-      const { data } = await api.post("/exams", { ...exam, questions });
+      const payload = {
+        ...exam,
+        // datetime-local inputs give plain strings with no timezone info.
+        // Converting to ISO here locks in the *browser's* interpretation of
+        // the time as an unambiguous UTC instant, so the backend (running in
+        // a different timezone on Render) reads the same moment you picked.
+        startTime: new Date(exam.startTime).toISOString(),
+        endTime: new Date(exam.endTime).toISOString(),
+        questions,
+      };
+      const { data } = await api.post("/exams", payload);
       if (publish) await api.patch(`/exams/${data.id}/status`, { status: "PUBLISHED" });
       navigate("/admin");
     } catch (err) {
