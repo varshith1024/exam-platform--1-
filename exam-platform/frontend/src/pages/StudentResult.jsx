@@ -15,7 +15,7 @@ export default function StudentResult() {
   if (!submission.evaluated) {
     return (
       <div className="max-w-3xl mx-auto py-10 px-4 text-center">
-        <p className="text-slate-500">Your submission hasn't been evaluated yet. Check back soon.</p>
+        <p className="text-slate-500">{"Your submission hasn't been evaluated yet. Check back soon."}</p>
         <Link to="/exams" className="text-indigo-600 text-sm mt-4 inline-block">← Back to exams</Link>
       </div>
     );
