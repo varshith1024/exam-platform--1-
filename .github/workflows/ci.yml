@@ -30,7 +30,7 @@ jobs:
         run: npm ci
 
       - name: Run Backend Lint
-        working-directory: backend
+        working-directory: exam-platform/backend
         run: npm run lint
 
       - name: Install Frontend Dependencies
@@ -38,9 +38,9 @@ jobs:
         run: npm ci
 
       - name: Run Frontend Lint
-        working-directory: frontend
+        working-directory: exam-platform/frontend
         run: npm run lint
 
       - name: Build Frontend
-        working-directory: frontend
+        working-directory: exam-platform/frontend
         run: npm run build
