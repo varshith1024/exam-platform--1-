@@ -16,4 +16,15 @@ module.exports = [
       "no-console": "off",
     },
   },
+
+  // Jest configuration for test files
+  {
+    files: ["tests/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.jest,
+      },
+    },
+  },
 ];
