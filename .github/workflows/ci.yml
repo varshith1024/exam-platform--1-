@@ -12,7 +12,7 @@ on:
       - main
 
 jobs:
-  ci:
+  cicd:
     runs-on: ubuntu-latest
 
     env:
