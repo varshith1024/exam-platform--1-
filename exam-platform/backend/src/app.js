@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const examRoutes = require("./routes/examRoutes");
 const submissionRoutes = require("./routes/submissionRoutes");
 const { autoSubmitOverdue } = require("./controllers/submissionController");
+const revisionSetRoutes = require('./routes/revisionSetRoutes');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/exams", examRoutes);
 app.use("/api/submissions", submissionRoutes);
+app.use('/api', revisionSetRoutes);
 
 // Auto-submit overdue exams every minute
 if (process.env.NODE_ENV !== "test") {
