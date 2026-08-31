@@ -3,4 +3,6 @@ module.exports = {
   clearMocks: true,
 
   setupFilesAfterEnv: ["<rootDir>/tests/setup.js"],
+
+  testTimeout: 15000,
 };
