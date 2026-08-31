@@ -42,6 +42,7 @@ model User {
 
   examsCreated Exam[]       @relation("ExamCreator")
   submissions  Submission[]
+  revisionSets RevisionSet[] @relation("RevisionSetCreator")
 }
 
 model Exam {
@@ -121,4 +122,27 @@ model Answer {
   evaluated     Boolean    @default(false)
 
   @@unique([submissionId, questionId])
+}
+
+model RevisionSet {
+  id          String         @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime       @default(now())
+
+  createdBy   User           @relation("RevisionSetCreator", fields: [createdById], references: [id])
+  createdById String
+
+  files       RevisionFile[]
+}
+
+model RevisionFile {
+  id            String      @id @default(uuid())
+  fileName      String
+  fileUrl       String
+  fileSize      Int
+  uploadedAt    DateTime    @default(now())
+
+  revisionSet   RevisionSet @relation(fields: [revisionSetId], references: [id], onDelete: Cascade)
+  revisionSetId String
 }

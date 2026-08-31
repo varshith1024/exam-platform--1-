@@ -8,44 +8,53 @@ export default function ExamAttempt() {
   const { examId } = useParams();
   const navigate = useNavigate();
 
-  const [data, setData] = useState(state || null);
+  const [data, setData] = useState(state || null);  
   const [answers, setAnswers] = useState({}); // questionId -> local answer value
   const [remainingSec, setRemainingSec] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const autosaveTimers = useRef({});
 
   // If page was refreshed (no location state), re-fetch by re-hitting start (idempotent)
-  useEffect(() => {
-    if (!data) {
-      api.post(`/submissions/start/${examId}`).then((res) => setData(res.data));
-    } else {
-      const seed = {};
-      data.questions.forEach((q) => {
-        if (q.savedAnswer) {
-          seed[q.id] = q.savedAnswer.mcqSelected ?? q.savedAnswer.textAnswer ?? q.savedAnswer.code ?? "";
-        } else if (q.type === "CODING") {
-          seed[q.id] = q.starterCode || "";
-        }
-      });
-      setAnswers(seed);
+  // Fetch exam if page was refreshed
+useEffect(() => {
+  if (data) return;
+
+  const fetchExam = async () => {
+    try {
+      const res = await api.post(`/submissions/start/${examId}`);
+      setData(res.data);
+    } catch (error) {
+      console.error("Failed to load exam:", error);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data === null]);
+  };
 
-  // Server-synced countdown
-  useEffect(() => {
-    if (!data?.deadlineAt) return;
-    const tick = () => {
-      const diff = Math.floor((new Date(data.deadlineAt) - new Date()) / 1000);
-      setRemainingSec(diff > 0 ? diff : 0);
-      if (diff <= 0) handleSubmit(true);
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data?.deadlineAt]);
+  fetchExam();
+}, [data, examId]);
 
+// Initialize answers when exam data is available
+useEffect(() => {
+  if (!data) return;
+
+  const seed = {};
+
+  data.questions.forEach((q) => {
+    if (q.savedAnswer) {
+      seed[q.id] =
+        q.savedAnswer.mcqSelected ??
+        q.savedAnswer.textAnswer ??
+        q.savedAnswer.code ??
+        "";
+    } else if (q.type === "CODING") {
+      seed[q.id] = q.starterCode || "";
+    }
+  });
+
+ // eslint-disable-next-line react-hooks/set-state-in-effect
+setAnswers(seed);
+}, [data]);
+
+
+  
   const saveAnswer = useCallback(
     (questionId, payload) => {
       if (!data) return;
@@ -70,17 +79,49 @@ export default function ExamAttempt() {
     }
   };
 
-  const handleSubmit = async (auto = false) => {
+  const handleSubmit = useCallback(
+  async (auto = false) => {
     if (submitting || !data) return;
+
     setSubmitting(true);
+
     try {
       await api.post(`/submissions/${data.submissionId}/submit`);
-      navigate("/exams", { replace: true, state: { message: auto ? "Time's up — auto-submitted" : "Submitted" } });
-    } catch (err) {
-      // already submitted server-side (e.g. auto-submit race) - just navigate away
+
+      navigate("/exams", {
+        replace: true,
+        state: {
+          message: auto ? "Time's up — auto-submitted" : "Submitted",
+        },
+      });
+    } catch {
       navigate("/exams", { replace: true });
     }
+  },
+  [submitting, data, navigate]
+);
+// Server-synced countdown
+useEffect(() => {
+  if (!data?.deadlineAt) return;
+
+  const tick = () => {
+    const diff = Math.floor(
+      (new Date(data.deadlineAt) - new Date()) / 1000
+    );
+
+    setRemainingSec(Math.max(diff, 0));
+
+    if (diff <= 0) {
+      handleSubmit(true);
+    }
   };
+
+  tick();
+
+  const interval = setInterval(tick, 1000);
+
+  return () => clearInterval(interval);
+}, [data?.deadlineAt, handleSubmit]);
 
   if (!data) return <div className="p-10 text-center text-slate-500">Loading exam...</div>;
 

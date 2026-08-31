@@ -12,6 +12,11 @@ import AdminCreateExam from "./pages/AdminCreateExam";
 import AdminSubmissionList from "./pages/AdminSubmissionList";
 import AdminEvaluateSubmission from "./pages/AdminEvaluateSubmission";
 
+import AdminRevisionSets from "./pages/AdminRevisionSets";
+import AdminRevisionSetDetail from "./pages/AdminRevisionSetDetail";
+import RevisionSets from "./pages/RevisionSets";
+import RevisionSetDetail from "./pages/RevisionSetDetail";
+
 function Nav() {
   const { user, logout } = useAuth();
   if (!user) return null;
@@ -20,9 +25,23 @@ function Nav() {
       <Link to={user.role === "ADMIN" ? "/admin" : "/exams"} className="font-bold text-indigo-600">
         ExamPlatform
       </Link>
+
+      
       <div className="flex items-center gap-4 text-sm">
-        <span className="text-slate-600">{user.name} ({user.role})</span>
+       
+        <span className="text-slate-600">Welcome {user.name} ({user.role}) </span>
+        <Link to ="/exams" className="font-bold text-indigo-600"> Home </Link>
+
         <button onClick={logout} className="text-red-500">Logout</button>
+        {user.role === "ADMIN" && (
+         <Link to="/admin/revision-sets" className="text-slate-600 hover:text-indigo-600">
+            Upload Sets
+         </Link> 
+         )}
+
+         <Link to="/revision-sets" className="text-slate-600 hover:text-indigo-600">
+            Revision Sets
+         </Link>
       </div>
     </nav>
   );
@@ -45,7 +64,10 @@ function AppRoutes() {
         <Route path="/admin/create" element={<ProtectedRoute adminOnly><AdminCreateExam /></ProtectedRoute>} />
         <Route path="/admin/exams/:examId/evaluate" element={<ProtectedRoute adminOnly><AdminSubmissionList /></ProtectedRoute>} />
         <Route path="/admin/submissions/:submissionId" element={<ProtectedRoute adminOnly><AdminEvaluateSubmission /></ProtectedRoute>} />
-
+        <Route path="/admin/revision-sets" element={<ProtectedRoute adminOnly><AdminRevisionSets /></ProtectedRoute>} />
+        <Route path="/admin/revision-sets/:setId" element={<ProtectedRoute adminOnly><AdminRevisionSetDetail /></ProtectedRoute>} />
+        <Route path="/revision-sets" element={<ProtectedRoute><RevisionSets /></ProtectedRoute>} />
+        <Route path="/revision-sets/:setId" element={<ProtectedRoute><RevisionSetDetail /></ProtectedRoute>} /> 
         <Route path="/" element={<Navigate to={user ? (user.role === "ADMIN" ? "/admin" : "/exams") : "/login"} replace />} />
       </Routes>
     </>
